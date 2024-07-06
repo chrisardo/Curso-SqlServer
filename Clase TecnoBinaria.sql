@@ -1,4 +1,4 @@
-﻿--Crear base de datos
+--Crear base de datos
 create database Ventas1
 on 
 primary(
@@ -150,7 +150,7 @@ from sys.tables a
 WHERE a.name <> 'sysdiagrams' 
 ORDER BY a.name,b.column_Id
 
---Stored Procedures (Procedimientos almacenados)
+--Stored Procedures (Procedimientos almacenados) - Parametros de entrada y salida
 create procedure sp_consulta @nombre nvarchar(20), @telefono int 
 as begin
 	select*from Clientes where nombre = @nombre and telefono = @telefono;
@@ -159,6 +159,16 @@ as begin
 end
 --Ejecutar el procedure
 exec sp_consulta 'edu', 34432
+
+create procedure SP_VerSalida @num1 float, @num2 float, @resultado float output
+as begin
+set @resultado = @num1 + @num2;
+end
+--Ejecutar el procedure
+declare @salida float
+exec SP_VerSalida 20, 30, @salida output
+select @salida
+
 
 --Identity
 create table pruebaIdentity(
@@ -293,8 +303,93 @@ end
 
 insert into Clientes values(3,'chrisedu',122);
 
+--Ejemplo eliminar-Trigger
+create trigger tr_cliente_delete
+on Clientes instead of delete
+as
+begin
+set nocount on;
+insert into dbo.log_historial(nombre, fecha, descripcion)
+select nombre, getdate(), 'Registros eliminados'
+from deleted
+end
+
+delete from Clientes where nombre='chrisedu'
 select*from dbo.log_historial
 
+--Exportar registros a XML
+select*from Clientes
+for Xml raw('Registro'), elements, root('XML')
+
+--Insertar en una tabla el contenido de otra
+insert into dbo.Clientes (id, nombre, telefono)
+select*from [dbo].infocliente
+
+--Datename (Controlar fecha) -> Permite saber la hora, minuto, segundo dias, mes a consultar
+--month"mes", quarter"cuarto", year"año", dayofyear"dia del año", day"dia", week"semana", hour"hora", second"segundo", millisecond"milisegundo"
+print datename(month,getdate()) 
+
+--Información de las vistas
+create view view_ejemplo as
+select nombre, telefono from dbo.Clientes
+
+select * from dbo.view_ejemplo
+--sp_help -> Da toda la informacion que hay en la base de datos
+--sp_helptext view_ejemplo --Muestra la vista que se escribió(query)
+--sp_depends view_ejemplo --Enseña de cuales tablas depende de esta vista se tiene.
+
+--Encriptar información de una vista
+create view view_seguridad
+with encryption as
+select nombre, telefono from dbo.Clientes
+
+sp_helptext view_seguridad
+
+--with Check option -> Si se hace algun cambio con alguna sentencia insert o update o delete solo se va a ser a lo que cumpla la vista.
+create view ver_paisesTest as
+select*from dbo.Clientes where nombre = 'edu' with check option
+
+select*from ver_paisesTest
+update ver_paisesTest set [nombre] = 'Test2'
+
+--Modificar o eliminar una vista
+alter view ver_paisesTest as
+select*from dbo.Clientes where nombre = 'edu' with check option
+
+--Clausula Group by (Agrupar registros) -> Si algun registro o alguna fila tienen los mismos datos se van a agrupar y se tomará como si fuera uno.
+select *from dbo.Clientes
+where nombre = 'chrisedu'  group by id, nombre, telefono
+
+--Clausula HAVING (Teniendo en cuenta, necesita del group by)
+--Order by (Ordenar registro)
+select *from dbo.Clientes
+where nombre = 'chrisedu'  group by id, nombre, telefono having telefono=122
+
+--Clausula Exists(Congruencia entre los campos)-> Para averiguar si algún dato de una tabla está dentro de otra.
+select nombre from dbo.Clientes as c
+where Not EXISTS (select*from dbo.infocliente as ic where c.id = ic.id_cliente)
+
+--DISTINCT-> Sirve para que no se vea ningun duplicado de información o de registro a la hora de hacer la consulta
+select distinct nombre from dbo.Clientes
+
+--Pivot y UnPivot -> 
+select Año, Mes, Monto from Calendario
+pivot(
+sum Monto)
+for Mes in (Enero, Febrero, Marzo, Abril, Mayo, Junio, Julio, Agosto, Septiembre, Octubre, Noviembre, Diciembre)
+) as PVT
+
+--Columna calculable con condicional CASE
+alter table dbo.Clientes
+add DigitoTelefono as
+case
+when Telefono >300 then 'Es mayor el numero de digitos'
+else 'Es menor el digito'
+end
+
+select*from dbo.Clientes
+
+--Crear job-> Tarea programada o automatizada a realizar en el servidor.
 
 
 
