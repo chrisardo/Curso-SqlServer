@@ -256,11 +256,15 @@ select*from ventas.clientes
 --Restaurar una base de datos .back
 /*
 1. Click dercho de Databases -> Restore Database -> Device
+*/
 
+--Order by-> Organiza consultas por un campo especificos ya sea en valores ascendentes o descentes.
+select*from clientes order by compras desc
 
-
-
-
+--Max -> Extraer el valor maximo de un campo.
+select max(compras) from clientes
+--Min -> Extraer el valor minimo de un campo.
+select min(compras) from clientes
 
 
 
