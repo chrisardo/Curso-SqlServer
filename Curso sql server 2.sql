@@ -23,7 +23,7 @@ alter database Prueba modify name = PruebaEditado
 
 --Crear tabla
 create table Empleados(
-idEmpleado int,
+idEmpleado int primary key,
 nombre varchar(20),
 apellido varchar(20),
 edad numeric(2),
@@ -39,6 +39,121 @@ nombre varchar(20),
 apellido varchar(30),
 salario decimal(18,2)
 )
+
+--null -> Vacio, no existe ningun valor
+--Primary key (pk)-> Insertar registros unicos de una tabla, no permite insertar null, solo permite un unico pk, facilita el enlace entre tablas
+create table Personas(
+--idPersona int primary key,
+idPersona int,
+--primary key(idPersona),
+--Crear regla (Constraint)
+constraint PK_enlace_persona primary key(idPersona),
+nombre varchar(10) not null,
+edad int not null
+)
+--Borrar llave primaruia
+alter table Personas drop constraint PK_enlace
+
+--Unique -> Es una regla que se asegura que todos los valores en una columna de una tabla son diferentes, no permite valores repetidos pero si permite valores de tipo null.
+create table Categorias(
+--idCateogrias int  not null unique,
+idCategoria int  not null,
+nombre varchar(10) not null,
+descrpcion varchar(10) not null,
+--constraint UQ_IDCATEGORIA unique(idCategoria)
+)
+--Alterar tabla poniendo el unique al id.
+alter table Categorias add constraint UQ_idCategorias unique (idCategoria)
+--Borrar el unique
+alter table Categorias drop constraint UQ_idCategorias
+
+--Check-> Es usado para limitar el rango de valores que se puede permitir como registro dentro de una columna, solo permite los valores según la regla especificada.
+create table Logo(
+idLogo int  not null,
+nombre varchar(10) not null,
+imagen int,
+
+--check(imagen>=18)
+constraint CK_imagen check (imagen>=18)
+)
+--alter table Logo add check (edad>=8)
+--BORRAR CHECK
+alter table	Logo drop constraint CK_imagen
+
+--DEFAULT->UTILIZADA PARA ESTABLECER VALOR POR DEFECTO EN UNA COLUMNA.
+create table Logo2(
+idLogo int  not null,
+--nombre varchar(10) default 'No tiene',
+nombre varchar(10),
+imagen int,
+)
+insert into Logo2 values(1,default, 30)
+--ALTERAR TABLA AGREGAR DEFAULT
+alter table Logo2 add constraint DF_CIUDAD DEFAULT 'NO TIENE' FOR nombre
+--BORRAR DEFAULT
+alter table	Logo2 drop constraint DF_CIUDAD
+
+--IDENTITY -> INCREMENTA VALOR AUTOMATICAMENTE A MEDIDA QUE VA RECIBIENDO INSERTS de valores en esa tabla, se utiliza para codigo de identificacion en tablas o generar valores unicos para cada nuevo registro que se inserte en esa tabla, solo puede haber un campo tipo identity por tabla solo uno.
+create table libros(
+--codigo int  identity, --Administra los valores automatico
+codigo int  identity(10,1), --Administra los valores automatico, primer registro empiece desde 10 y aumentar el valor siguiente de 1 en 1
+titulo varchar(10) not null,
+autor varchar(60) not null
+)
+insert into libros values('libro1','chris')
+insert into libros values('libro2','chris')
+
+--Ver el valor inicial del campo identity en este caso es 10
+select ident_seed('libros')
+--Ver el rango de incremento de cada valor del identity
+select ident_incr('libros')
+--Desactivar la regla de un identity en una tabla
+set identity_insert libros on --ON o OFF
+insert into libros (codigo, titulo, autor) values(15,'libro2','chris')
+
+--FOREIGN KEY(LLAVE FORANEA) -> SE USA PARA PREVENIR DAÑOS EN LAS RELACIONES DE REGISTROS ENTRE TABLAS, REALIZA EL ENLACE CON UNA LLAVE PRIMARIA, evitan el insert de datos no compatibles con el campo de la llave primaria, permite poner null.
+create table libros2(
+--codigo int  identity, --Administra los valores automatico
+codigo int, --Administra los valores automatico, primer registro empiece desde 10 y aumentar el valor siguiente de 1 en 1
+titulo varchar(10) not null,
+autor varchar(60) not null
+
+constraint PK_LIBROS2 PRIMARY KEY (codigo)
+)
+create table Ordenes(
+--codigo int  identity, --Administra los valores automatico
+idOrden int not null, --Administra los valores automatico, primer registro empiece desde 10 y aumentar el valor siguiente de 1 en 1
+articulo varchar(10) not null,
+codigo int
+
+constraint FK_Ordenes foreign key references libros2(codigo) --Llave de enlace a otra llave primaria.
+on delete cascade --Permite borrar registros relacionados entre ambas tablas o cualquier tabla a la que esté enlazada la llave foranea.
+)
+--Borrar un foreign key
+Alter table Ordenes drop constraint FK_Ordenes
+
+--VISTAS (VIEWS)-> ES UNA TABLA VIRTUAL BASADA EN EL RESULTADO DE UNA CONSULTA CONTIENE FILAS Y COLUMNAS IGUAL QUE UNA TABLA REAL PERO LOS CAMPOS DE UNA VISTA PROVIENEN DE UNA SELECCIÓN ESPECIFICA CREADA DESDE UNA CONSULTA HACIA OTRA TABLA, SE PUEDEN AGREGAR INSTRUCCIONES Y FUNCIONES DE SQL TAL COMO SI PROVENIERAN DE UNA SOLA TABLA.
+CREATE VIEW Categorias
+AS
+SELECT*FROM Categorias
+--Alterar view
+Alter view Categorias
+AS
+SELECT*FROM Categorias
+--Borrar vista
+drop view Categorias
+
+--Index -> Se usan para megorar el rendimiento de nuestras consultas. Hay 2 tipos de indices: Clustered y Noclustered(No agrupados)
+--Clustered: Definen el orden de los datos.
+create clustered index I_idCateogerias
+on Categorias(idCategoria)
+--Noclustered: No definen dicho orden.
+create nonclustered index I_idCateogerias
+on Categorias(idCategoria)
+--Cambiar el nombre del indice
+exec sp_rename 'Categorias. I_idCateogerias', ' I_idCat', 'INDEX'
+--Borrar indice
+drop index  I_idCat on Categorias
 
 --Renombrar nombre a la tabla
 exec sp_rename 'Empleados', 'Usuarios'
@@ -102,6 +217,45 @@ select nombre, apellido, salario from Empleados
 --Seleccionar cantidad y porcentaje de registro
 select top 5 percent *from Empleados
 
+  CREATE TABLE clientes (
+  id_cliente INT NOT NULL PRIMARY KEY,
+  nombre VARCHAR(20) NOT NULL,
+  apellido VARCHAR(20) NOT NULL,
+  pais VARCHAR(50) NOT NULL,
+  compras INT NULL
+);
+  
+  insert into Clientes values(1, 'Juan', 'Pérez', 'Estados Unidos', 1);
+  insert into Clientes values(2, 'María', 'Gómez', 'Argentina', 2);
+  insert into Clientes values(3, 'Carlos', 'López', 'Brasil', NULL);
+  insert into Clientes values(4, 'Laura', 'Martínez', 'Canadá', 4);
+  insert into Clientes values(5, 'Pedro', 'Hernández', 'China', 5);
+    insert into Clientes values(6, 'Ana', 'Ruiz', 'Brasil', NULL);
+
+--DISTINCT -> UTILIZADA PARA SELECCIONAR VALORES UNICOS DE UNA COLUMNA O  UN CONJUNTO DE COLUMNAS DENTRO DE UNA CONSULTA ESTO DEVUELVE SOLO LOS VALORES DISTINTOS Y ELIMINA LAS REPETICIONES DE DATOS EN EL RESULTADO.
+SELECT DISTINCT pais from clientes
+
+--Alias-> Es un nombre especifico que se le da a un campo al momento de realizar una consulta en una tabla.
+SELECT id_cliente as Identificador, nombre as "nombre cliente" from clientes
+
+--CONCATENAR CAMPOS -> Unir  registros
+SELECT cast(id_cliente as varchar(2)) + ' ' +nombre+' '+ apellido from clientes
+
+--Operadores matematicos
+select nombre, compras+(compras*0.1) as "Nueva compra" from clientes
+
+--ESQUEMAS(INSTANCE) -> ES UNA ESTRUCTURA LÓGICA QUE SE UTILIZA PARA ORGANIZR Y AGRUPAR OBJETOS de la base de datos como tablas, vistas, procedimientos, funciones, etc. Proporciona como una forma de organizar y gestionar mas eficientemente los objetos dentro de la BD, actua como una especie de contenedor logico y permite aislar y controlar los permisos de acceso a esos objetos, cada objeto de la BD DEBE ESTAR DENTRO DE UN ESQUEMA ESPECIFICO.
+create schema Ventas
+create schema Cobros
+create table ventas.clientes(
+id_cliente int,
+nombre int
+)
+select*from ventas.clientes
+
+--Restaurar una base de datos .back
+/*
+1. Click dercho de Databases -> Restore Database -> Device
 
 
 
